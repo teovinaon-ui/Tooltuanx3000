@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SUNWIN PRO AI - VIP SYSTEM</title>
+    <style>
+        body { background: #0d0d0d; color: #0f0; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; }
+        #game-frame { display: none; width: 100%; height: 100vh; border: none; }
+        
+        /* THANH THÔNG BÁO CHẠY (MARQUEE) */
+        .notification-bar {
+            background: #111; border-bottom: 1px solid #ff00aa; 
+            color: #ff00aa; font-weight: bold; padding: 10px 0;
+            overflow: hidden; white-space: nowrap; font-size: 13px;
+        }
+        .marquee { display: inline-block; animation: marquee 12s linear infinite; padding-left: 100%; }
+        @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
+
+        /* GIAO DIỆN CHÍNH */
+        .container { max-width: 400px; margin: auto; padding: 20px; text-align: center; }
+        input { width: 85%; padding: 12px; margin: 10px 0; background: #000; border: 1px solid #ff00aa; color: #fff; border-radius: 8px; text-align: center; outline: none; }
+        .btn { background: #ff00aa; color: white; padding: 14px; border: none; font-weight: bold; cursor: pointer; border-radius: 8px; width: 92%; margin-top: 10px; }
+        
+        .auth-wrapper { background: #1a1a1a; border-radius: 15px; border: 1px solid #333; overflow: hidden; margin-top: 30px; }
+        .tab-header { display: flex; border-bottom: 1px solid #333; }
+        .tab-btn { flex: 1; padding: 15px; cursor: pointer; background: #222; color: #666; border: none; font-weight: bold; }
+        .tab-btn.active { background: #1a1a1a; color: #ff00aa; border-bottom: 2px solid #ff00aa; }
+        .auth-content { padding: 20px; display: none; }
+        .auth-content.active { display: block; }
+
+        #game-selection, #key-verification { display: none; margin-top: 50px; }
+        .card { background: #1a1a1a; padding: 25px; border-radius: 15px; border: 1px solid #ff00aa; }
+
+        /* MINI TOOL */
+        #mini-tool {
+            display: none; position: fixed; top: 120px; left: 20px; background: rgba(10, 10, 10, 0.95);
+            width: 170px; padding: 15px; border-radius: 20px; border: 2px solid #ff00aa; text-align: center; z-index: 10000;
+        }
+        #prediction { font-size: 38px; font-weight: 900; margin: 10px 0; }
+        #core-log { font-size: 9px; color: #0f0; font-style: italic; }
+        .loading { font-size: 11px; color: #ff0; display: none; margin-top: 5px; }
+
+        /* NÚT TELEGRAM GÓC MÀN HÌNH */
+        .tele-float {
+            position: fixed; bottom: 20px; right: 20px;
+            background: linear-gradient(45deg, #0088cc, #005f8f);
+            color: white; padding: 12px 20px; border-radius: 50px;
+            text-decoration: none; font-weight: bold; font-size: 14px;
+            box-shadow: 0 0 15px rgba(0, 136, 204, 0.5);
+            z-index: 99999; display: flex; align-items: center; gap: 8px;
+            border: 1px solid #fff;
+        }
+        .tele-float:active { transform: scale(0.95); }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="ui-container">
+        <div class="notification-bar">
+            <div class="marquee">📢 MUA KEY IB TELE ADMIN @TUANX3000 - HỆ THỐNG TOOL 📢</div>
+        </div>
+
+        <h1 style="color: #ff00aa; margin-top: 20px;">SUNWIN PRO AI</h1>
+
+        <div id="auth-section">
+            <div class="auth-wrapper">
+                <div class="tab-header">
+                    <button class="tab-btn active" onclick="openTab(event, 'login')">ĐĂNG NHẬP</button>
+                    <button class="tab-btn" onclick="openTab(event, 'register')">ĐĂNG KÝ</button>
+                </div>
+                <div id="login" class="auth-content active">
+                    <input type="text" id="user" placeholder="Tên đăng nhập">
+                    <input type="password" id="pass" placeholder="Mật khẩu">
+                    <button class="btn" onclick="handleAuth('login')">ĐĂNG NHẬP</button>
+                    <div id="login-load" class="loading">Đang kết nối máy chủ...</div>
+                </div>
+                <div id="register" class="auth-content">
+                    <input type="text" id="reg-user" placeholder="Tên tài khoản mới">
+                    <input type="password" id="reg-pass" placeholder="Mật khẩu mới">
+                    <p style="font-size: 10px; color: #888;">* Đăng ký xong vui lòng IB Admin để kích hoạt.</p>
+                    <button class="btn" onclick="handleAuth('register')">ĐĂNG KÝ NGAY</button>
+                    <div id="reg-load" class="loading">Đang tạo tài khoản...</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-selection">
+            <div class="card">
+                <h2 style="color: #fff;">CHỌN CỔNG GAME</h2>
+                <div style="background: #222; padding: 15px; border-radius: 10px; margin: 10px 0; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color: #fff; font-weight: bold; margin-left: 10px;">SUNWIN</span>
+                    <button class="btn" style="width: 80px; margin: 0; padding: 8px;" onclick="showKeyGate()">CHỌN</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="key-verification">
+            <div class="card">
+                <h2 style="color: #fff;">NHẬP KEY KÍCH HOẠT</h2>
+                <p style="font-size: 11px; color: #aaa; margin-bottom: 5px;">Liên hệ tele Admin @tuanx3000 để mua Key</p>
+                <input type="text" id="key-input" placeholder="MÃ KEY CỦA BẠN">
+                <button class="btn" onclick="verifyKey()">KÍCH HOẠT</button>
+                <button class="btn" style="background:#444;" onclick="location.reload()">QUAY LẠI</button>
+            </div>
+        </div>
+    </div>
+
+    <a href="https://t.me/tuanx3000" class="tele-float" target="_blank">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-8.609 3.33c-2.068.8-4.133 1.598-5.724 2.21a405.15 405.15 0 0 1-2.863 1.09c-1.036.387-1.464 1.13-1.066 1.836.38.675 1.17 1.05 1.77 1.258.855.295 2.112.592 3.238.86 1.096.26 2.09.497 2.76.662.388.948.88 2.376 1.34 3.86.32 1.035.733 1.905 1.196 2.457.514.614 1.25.862 1.875.643.55-.193.996-.707 1.408-1.22.45-.56.88-1.218 1.32-1.848.337-.482.684-.95 1.055-1.38 1.11.83 2.302 1.69 3.495 2.492.657.442 1.458.74 2.246.52 1.144-.318 1.733-1.74 2.042-3.328.745-3.834 1.942-10.742 2.34-13.88.24-1.887-1.15-2.868-2.586-2.616z"></path></svg>
+        Admin:@tuanx3000
+    </a>
+
+    <iframe id="game-frame"></iframe>
+    <div id="mini-tool">
+        <div style="color:#666; font-size:10px;">PHIÊN #<span id="session-id">......</span></div>
+        <div id="prediction" style="color: #444;">WAIT</div>
+        <div id="core-log">Ready...</div>
+        <div style="font-size: 8px; color: #ff00aa; margin-top: 5px;">6 CORE AI TECHNOLOGY</div>
+    </div>
+
+    <script>
+        // *** THAY LINK SCRIPT CỦA BẠN VÀO ĐÂY ***
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxBMRWwjiz2Cmw7WTU-r7oChYAErev3C8Eq93bNp9eSM5B3vH62DztB6_RNtJ6TLTiTZQ/exec";
+        
+        let userRow = null;
+        let lastSession = "";
+
+        function openTab(e, name) {
+            let contents = document.getElementsByClassName("auth-content");
+            for (let i = 0; i < contents.length; i++) contents[i].style.display = "none";
+            let tabs = document.getElementsByClassName("tab-btn");
+            for (let i = 0; i < tabs.length; i++) tabs[i].classList.remove("active");
+            document.getElementById(name).style.display = "block";
+            e.currentTarget.classList.add("active");
+        }
+
+        async function handleAuth(type) {
+            if (type === 'register') {
+                const u = document.getElementById('reg-user').value;
+                const p = document.getElementById('reg-pass').value;
+                if(!u || !p) return alert("Vui lòng nhập đủ thông tin!");
+                
+                document.getElementById('reg-load').style.display = 'block';
+                try {
+                    await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({user:u, pass:p}) });
+                    alert("Đăng ký thành công! Hãy IB Admin @tuanx3000 để mua Key.");
+                    location.reload();
+                } catch(e) { alert("Lỗi kết nối!"); }
+                document.getElementById('reg-load').style.display = 'none';
+            } else {
+                const u = document.getElementById('user').value;
+                const p = document.getElementById('pass').value;
+                document.getElementById('login-load').style.display = 'block';
+                try {
+                    const res = await fetch(SCRIPT_URL);
+                    const rows = await res.json();
+                    userRow = rows.slice(1).find(r => r[0] == u && r[1] == p);
+                    
+                    if (userRow) {
+                        document.getElementById('auth-section').style.display = 'none';
+                        document.getElementById('game-selection').style.display = 'block';
+                    } else { alert("Sai tài khoản hoặc mật khẩu!"); }
+                } catch(e) { alert("Lỗi tải dữ liệu!"); }
+                document.getElementById('login-load').style.display = 'none';
+            }
+        }
+
+        function showKeyGate() {
+            document.getElementById('game-selection').style.display = 'none';
+            document.getElementById('key-verification').style.display = 'block';
+        }
+
+        function verifyKey() {
+            const inputKey = document.getElementById('key-input').value.trim();
+            const serverKey = userRow[2];
+            const expiryDate = new Date(userRow[3]); 
+            const today = new Date();
+            today.setHours(0,0,0,0); 
+
+            if (serverKey === "KEY_CHO_DUYET") return alert("Tài khoản chưa kích hoạt. Vui lòng mua Key từ Admin @tuanx3000!");
+            if (inputKey !== serverKey) return alert("Mã Key không chính xác!");
+            if (today > expiryDate) return alert("Key đã hết hạn! Vui lòng liên hệ Admin gia hạn.");
+
+            document.getElementById('ui-container').style.display = 'none';
+            document.querySelector('.tele-float').style.display = 'none'; // Ẩn nút tele khi vào game để đỡ vướng
+            document.getElementById('game-frame').src = "https://web.sunwin.bi";
+            document.getElementById('game-frame').style.display = 'block';
+            document.getElementById('mini-tool').style.display = 'block';
+            setInterval(syncData, 3000);
+        }
+
+        async function syncData() {
+            const proxy = 'https://api.allorigins.win/get?url=';
+            const targetApi = 'https://sunwinsaygex-vd0m.onrender.com/api/sun';
+            try {
+                const res = await fetch(`${proxy}${encodeURIComponent(targetApi + '?t=' + Date.now())}`);
+                const json = await res.json();
+                const data = JSON.parse(json.contents);
+                if (data && data.phien && data.phien !== lastSession) {
+                    lastSession = data.phien;
+                    document.getElementById('session-id').innerText = parseInt(data.phien) + 1;
+                    const pred = document.getElementById('prediction');
+                    const log = document.getElementById('core-log');
+                    
+                    pred.innerText = "SOI"; pred.style.color = "#ff0";
+                    setTimeout(() => log.innerText = "● Core 1-2: Analyzing...", 2000);
+                    setTimeout(() => log.innerText = "● Core 3-4: Calculating...", 8000);
+                    setTimeout(() => log.innerText = "● Core 5-6: Finalizing...", 15000);
+                    
+                    setTimeout(() => {
+                        let result = data.ketqua || (Math.random() > 0.5 ? "TÀI" : "XỈU");
+                        pred.innerText = result;
+                        pred.style.color = result === "TÀI" ? "#ff4d4d" : "#00ff00";
+                        log.innerText = "● Sync Complete";
+                    }, 20000);
+                }
+            } catch (e) {}
+        }
+
+        const tool = document.getElementById('mini-tool');
+        let move = false, ox, oy;
+        tool.addEventListener('touchstart', e => {
+            move = true; ox = tool.offsetLeft - e.touches[0].clientX; oy = tool.offsetTop - e.touches[0].clientY;
+        }, {passive: true});
+        document.addEventListener('touchmove', e => {
+            if (move) {
+                tool.style.left = (e.touches[0].clientX + ox) + 'px';
+                tool.style.top = (e.touches[0].clientY + oy) + 'px';
+            }
+        }, {passive: false});
+        document.addEventListener('touchend', () => move = false);
+    </script>
+</body>
+</html>
