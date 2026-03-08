@@ -7,7 +7,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler
 # --- CẤU HÌNH ---
 TOKEN = os.environ.get('TOKEN')
 CHANNEL_ID = '-1003808692297'
-ADMIN_ID = 583859809 # ID của bạn đã được thiết lập
+ADMIN_ID = 5838598093 # ID của bạn đã được thiết lập
 API_URL = "https://wtxmd52.tele68.com/v1/txmd5/sessions?cp=R&cl=R&pf=web&at=988f9f949c6e90fc02d78a38563031f6"
 
 bot_enabled = True
