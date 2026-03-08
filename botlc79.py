@@ -1,30 +1,30 @@
 import os
 import requests
-import random
+import logging
 from flask import Flask
 from threading import Thread
-from telegram.ext import ApplicationBuilder
+from telegram.ext import ApplicationBuilder, CommandHandler
 
-# --- 1. CẤU HÌNH ---
-TOKEN = os.environ.get('TOKEN') # Lấy từ Environment Variables trên Render
+# --- CẤU HÌNH ---
+TOKEN = os.environ.get('TOKEN')
 CHANNEL_ID = '-1003808692297'
 API_URL = "https://wtxmd52.tele68.com/v1/txmd5/sessions?cp=R&cl=R&pf=web&at=988f9f949c6e90fc02d78a38563031f6"
-
+bot_enabled = True
 last_session = None
 
-# --- 2. WEB SERVER (ĐỂ RENDER KHÔNG TẮT BOT) ---
+# --- WEB SERVER (ĐỂ RENDER KHÔNG BỊ TẮT) ---
 app_web = Flask(__name__)
 @app_web.route('/')
-def home():
-    return "Bot is running!"
+def home(): return "Bot is running!"
 
 def run_web():
     port = int(os.environ.get('PORT', 8080))
     app_web.run(host='0.0.0.0', port=port)
 
-# --- 3. ENGINE DỰ ĐOÁN ---
+# --- HÀM TÍNH TOÁN ---
 async def job_monitor(context):
-    global last_session
+    global last_session, bot_enabled
+    if not bot_enabled: return
     try:
         response = requests.get(API_URL).json()
         phien = response['list'][0]
@@ -36,16 +36,33 @@ async def job_monitor(context):
             msg = f"🌟 LC79 VIP SYSTEM 🌟\n🎯 Phiên: #{id_moi}\n🔮 Dự đoán: {ket_qua}\n♾️ Mã MD5: {ma_md5}"
             await context.bot.send_message(chat_id=CHANNEL_ID, text=msg)
             last_session = phien['id']
+            print(f"Đã gửi dự đoán phiên #{id_moi}") # Log để kiểm tra trong Render
     except Exception as e:
-        print(f"Lỗi: {e}")
+        print(f"Lỗi job_monitor: {e}")
 
-# --- 4. KHỞI CHẠY ---
+# --- COMMANDS ---
+async def bat_tool(update, context):
+    global bot_enabled
+    bot_enabled = True
+    await update.message.reply_text("✅ Đã bật.")
+
+async def tat_tool(update, context):
+    global bot_enabled
+    bot_enabled = False
+    await update.message.reply_text("❌ Đã tắt.")
+
+# --- KHỞI CHẠY ---
 if __name__ == '__main__':
-    # Chạy Web server trong background
-    Thread(target=run_web).start()
+    # Chạy Web server
+    Thread(target=run_web, daemon=True).start()
     
-    # Chạy Bot Telegram
+    # Khởi tạo Bot với JobQueue
     app = ApplicationBuilder().token(TOKEN).build()
-    if app.job_queue:
-        app.job_queue.run_repeating(job_monitor, interval=30, first=1)
+    app.add_handler(CommandHandler("battoollc79", bat_tool))
+    app.add_handler(CommandHandler("tattoollc79", tat_tool))
+    
+    # Kích hoạt job định kỳ 30 giây
+    app.job_queue.run_repeating(job_monitor, interval=30, first=5)
+    
+    print("Bot đang chạy...")
     app.run_polling()
