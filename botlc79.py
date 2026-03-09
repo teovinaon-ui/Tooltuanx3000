@@ -3,8 +3,8 @@ import requests
 import random
 import logging
 import asyncio
+import threading
 from flask import Flask
-from threading import Thread
 from telegram.ext import ApplicationBuilder, CommandHandler
 
 # --- CẤU HÌNH ---
@@ -21,7 +21,6 @@ app_flask = Flask(__name__)
 def home(): return "Bot is running!"
 
 def run_web():
-    # Sử dụng cổng từ biến môi trường của Render
     port = int(os.environ.get('PORT', 10000))
     app_flask.run(host='0.0.0.0', port=port)
 
@@ -40,10 +39,10 @@ async def job_monitor(context):
                 id_moi = int(phien['id']) + 1
                 ma_md5 = phien.get('_id', '0')
                 diem = (id_moi + int(ma_md5[-1], 16)) % 10
-                ti_le = random.randint(74, 88)
+                ti_le = random.randint(74, 85)
                 ket_qua = "🟢 TÀI" if diem >= 5 else "🔴 XỈU"
                 
-                msg = (f"🌟 LC79 VIP Tuanx3000 🌟\n🎯 Phiên: #{id_moi}\n"
+                msg = (f"🌟 LC79 VIP SYSTEM 🌟\n🎯 Phiên: #{id_moi}\n"
                        f"🔮 Dự đoán: {ket_qua}\n📊 Tỉ lệ chuẩn: {ti_le}%\n♾️ Mã MD5: {ma_md5}")
                 
                 await context.bot.send_message(chat_id=CHANNEL_ID, text=msg)
@@ -64,21 +63,23 @@ async def tat_tool(update, context):
     await update.message.reply_text("❌ Bot đã được TẮT.")
 
 if __name__ == '__main__':
-    # Chạy Web Server song song để Render không báo Time Out
-    Thread(target=run_web, daemon=True).start()
+    # 1. Chạy Web Server song song
+    threading.Thread(target=run_web, daemon=True).start()
     
-    # Khởi tạo và làm sạch Webhook cũ
+    # 2. Khởi tạo bot và tạo Event Loop mới an toàn cho Render
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
     app = ApplicationBuilder().token(TOKEN).build()
     
-    async def setup_bot():
-        await app.bot.delete_webhook() # Xóa xung đột
-        if app.job_queue:
-            app.job_queue.run_repeating(job_monitor, interval=30, first=5)
+    # Xóa webhook an toàn
+    loop.run_until_complete(app.bot.delete_webhook())
     
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(setup_bot())
+    if app.job_queue:
+        app.job_queue.run_repeating(job_monitor, interval=30, first=5)
     
     app.add_handler(CommandHandler("battoollc79", bat_tool))
     app.add_handler(CommandHandler("tattoollc79", tat_tool))
     
+    logging.info("Bot đã khởi động thành công...")
     app.run_polling()
