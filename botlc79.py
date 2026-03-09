@@ -2,6 +2,8 @@ import os
 import requests
 import random
 import logging
+from flask import Flask
+from threading import Thread
 from telegram.ext import ApplicationBuilder, CommandHandler
 
 # --- CẤU HÌNH ---
